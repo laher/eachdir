@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -23,19 +24,31 @@ func main() {
 	wd, _ := os.Getwd()
 	ctx := context.Background()
 	for _, dir := range dirs {
-		log.Printf("cd %s\n", dir)
-		if err := os.Chdir(dir); err != nil {
+		matches, err := filepath.Glob(dir)
+		if err != nil {
 			panic(err)
 		}
-		// run command
-		c := exec.CommandContext(ctx, args[0], args[1:]...)
-		c.Stdout = os.Stdout
-		if err := c.Run(); err != nil {
-			panic(err)
-		}
-		log.Printf("cd %s\n", wd)
-		if err := os.Chdir(wd); err != nil {
-			panic(err)
+		for _, match := range matches {
+			s, err := os.Stat(match)
+			if err != nil {
+				panic(err)
+			}
+			if s.IsDir() {
+				log.Printf("cd %s\n", match)
+				if err := os.Chdir(match); err != nil {
+					panic(err)
+				}
+				// run command
+				c := exec.CommandContext(ctx, args[0], args[1:]...)
+				c.Stdout = os.Stdout
+				if err := c.Run(); err != nil {
+					panic(err)
+				}
+				// log.Printf("cd %s\n", wd)
+				if err := os.Chdir(wd); err != nil {
+					panic(err)
+				}
+			}
 		}
 	}
 }
