@@ -26,27 +26,33 @@ func main() {
 	for _, dir := range dirs {
 		matches, err := filepath.Glob(dir)
 		if err != nil {
-			panic(err)
+			log.Println(err)
+			os.Exit(1)
 		}
 		for _, match := range matches {
 			s, err := os.Stat(match)
 			if err != nil {
-				panic(err)
+				log.Println(err)
+				os.Exit(1)
 			}
 			if s.IsDir() {
 				log.Printf("cd %s\n", match)
 				if err := os.Chdir(match); err != nil {
-					panic(err)
+					log.Println(err)
+					os.Exit(1)
 				}
+				// log.Printf("run %s\n", strings.Join(args, ","))
 				// run command
 				c := exec.CommandContext(ctx, args[0], args[1:]...)
 				c.Stdout = os.Stdout
 				if err := c.Run(); err != nil {
-					panic(err)
+					log.Println(err)
+					os.Exit(1)
 				}
 				// log.Printf("cd %s\n", wd)
 				if err := os.Chdir(wd); err != nil {
-					panic(err)
+					log.Println(err)
+					os.Exit(1)
 				}
 			}
 		}
